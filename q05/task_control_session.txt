@@ -1,0 +1,43 @@
+WEEK2$ cd /home/dmh/桌面/system-tools-week2/q05
+WEEK2$ rm -f stdout.log stderr.log cleanup.log
+WEEK2$ chmod +x worker.sh
+WEEK2$ echo '[1] foreground start with separated stdout/stderr'
+[1] foreground start with separated stdout/stderr
+WEEK2$ ./worker.sh >stdout.log 2>stderr.log
+^Z
+[1]+  Stopped                 ./worker.sh > stdout.log 2> stderr.log
+WEEK2$ echo '[2] Ctrl-Z sent; stopped state:'
+[2] Ctrl-Z sent; stopped state:
+WEEK2$ jobs -l
+[1]+  4891 Stopped                 ./worker.sh > stdout.log 2> stderr.log
+WEEK2$ echo '[3] continue in background with bg:'
+[3] continue in background with bg:
+WEEK2$ bg
+[1]+ ./worker.sh > stdout.log 2> stderr.log &
+WEEK2$ jobs -l
+[1]+  4891 Running                 ./worker.sh > stdout.log 2> stderr.log &
+WEEK2$ pid=$(jobs -p); echo "PID_FROM_JOBS=$pid"
+PID_FROM_JOBS=4891
+WEEK2$ echo '[4] send SIGTERM (never kill -9)' && kill -TERM "$pid"
+[4] send SIGTERM (never kill -9)
+WEEK2$ wait "$pid"; echo "WAIT_EXIT=$?"
+[1]+  Done                    ./worker.sh > stdout.log 2> stderr.log
+WAIT_EXIT=0
+WEEK2$ echo '[5] cleanup evidence:'
+[5] cleanup evidence:
+WEEK2$ cat cleanup.log
+CLEAN_EXIT
+WEEK2$ echo '[6] final jobs output:'
+[6] final jobs output:
+WEEK2$ jobs
+WEEK2$ echo '[7] stdout/stderr verification:'
+[7] stdout/stderr verification:
+WEEK2$ tail -n 5 stdout.log; wc -c stderr.log
+5
+6
+7
+8
+9
+0 stderr.log
+WEEK2$ exit
+logout

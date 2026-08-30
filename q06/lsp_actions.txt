@@ -1,0 +1,13 @@
+LSP server: python-lsp-server
+Capability definitionProvider: True
+Go to definition: [{'uri': 'file:///home/dmh/%E6%A1%8C%E9%9D%A2/system-tools-week2/q06/math_utils.py', 'range': {'start': {'line': 0, 'character': 4}, 'end': {'line': 0, 'character': 15}}}]
+Find references count: 5
+  reference: app.py {'line': 0, 'character': 23}
+  reference: app.py {'line': 2, 'character': 6}
+  reference: math_utils.py {'line': 0, 'character': 4}
+  reference: test_math_utils.py {'line': 0, 'character': 23}
+  reference: test_math_utils.py {'line': 4, 'character': 11}
+Rename symbol: total_price -> calculate_total
+Rename files: app.py, math_utils.py, test_math_utils.py
+Rename edit count: 3
+Semantic rename applied successfully

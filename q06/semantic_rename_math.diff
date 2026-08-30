@@ -1,0 +1,6 @@
+--- math_utils_before.txt	2026-08-30 03:08:13.048547249 -0700
++++ math_utils.py	2026-08-30 03:08:13.252547583 -0700
+@@ -1,2 +1,2 @@
+-def total_price(price: float, count: int) -> float:
++def calculate_total(price: float, count: int) -> float:
+     return price * count
