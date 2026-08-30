@@ -1,0 +1,11 @@
+--- merge_sort_buggy.py	2026-08-30 02:57:28.042385235 -0700
++++ merge_sort.py	2026-08-30 02:57:28.038385148 -0700
+@@ -5,7 +5,7 @@
+         if left[i] <= right[j]:
+             result.append(left[i]); i += 1
+         else:
+-            result.append(right[i]); j += 1  # defect: should use right[j]
++            result.append(right[j]); j += 1
+     return result + left[i:] + right[j:]
+ 
+ 

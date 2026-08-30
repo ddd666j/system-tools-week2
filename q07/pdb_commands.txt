@@ -1,0 +1,12 @@
+b merge_sort_buggy.py:8
+c
+p i
+p j
+p left
+p right
+p left[i]
+p right[j]
+p right[i]
+n
+p result
+c

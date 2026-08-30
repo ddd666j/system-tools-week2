@@ -1,0 +1,5 @@
+before_runs=[0.085, 0.088]
+after_runs=[0.009, 0.009]
+before_median=0.086500s
+after_median=0.009000s
+speedup=9.61x

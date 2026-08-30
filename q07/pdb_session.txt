@@ -1,0 +1,18 @@
+> /home/dmh/桌面/system-tools-week2/q07/merge_sort_buggy.py(1)<module>()
+-> def merge(left, right):
+(Pdb) Breakpoint 1 at /home/dmh/桌面/system-tools-week2/q07/merge_sort_buggy.py:8
+(Pdb) > /home/dmh/桌面/system-tools-week2/q07/merge_sort_buggy.py(8)merge()
+-> result.append(right[i]); j += 1  # defect: should use right[j]
+(Pdb) 0
+(Pdb) 0
+(Pdb) [3]
+(Pdb) [1]
+(Pdb) 3
+(Pdb) 1
+(Pdb) 1
+(Pdb) > /home/dmh/桌面/system-tools-week2/q07/merge_sort_buggy.py(4)merge()
+-> while i < len(left) and j < len(right):
+(Pdb) [1]
+(Pdb) > /home/dmh/桌面/system-tools-week2/q07/merge_sort_buggy.py(8)merge()
+-> result.append(right[i]); j += 1  # defect: should use right[j]
+(Pdb) 
