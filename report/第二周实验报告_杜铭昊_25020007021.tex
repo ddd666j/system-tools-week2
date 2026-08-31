@@ -1,0 +1,318 @@
+\documentclass[UTF8,a4paper,11pt]{ctexart}
+\usepackage[margin=2.1cm,headheight=15pt]{geometry}
+\usepackage{graphicx,float,booktabs,tabularx,array,xcolor,listings,fancyhdr,hyperref,caption}
+\graphicspath{{assets/}}
+\definecolor{mainblue}{HTML}{174A7E}
+\definecolor{codebg}{HTML}{F4F6F8}
+\hypersetup{colorlinks=true,linkcolor=mainblue,urlcolor=mainblue,pdfauthor={杜铭昊},pdftitle={系统开发工具基础第二周实验报告}}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,backgroundcolor=\color{codebg},showstringspaces=false,columns=fullflexible}
+\captionsetup{font=small,labelfont=bf}
+\pagestyle{fancy}\fancyhf{}\lhead{系统开发工具基础}\rhead{第二周实验报告}\cfoot{\thepage}
+\ctexset{section={format=\Large\bfseries\color{mainblue}},subsection={format=\large\bfseries}}
+\setlength{\parindent}{2em}\setlength{\parskip}{0.25em}\linespread{1.16}
+\newcommand{\screen}[2]{\begin{figure}[H]\centering\includegraphics[width=\textwidth,height=.62\textheight,keepaspectratio]{#1}\caption{#2}\end{figure}}
+\newcommand{\twopic}[4]{\begin{figure}[H]\centering
+\begin{minipage}[t]{.485\textwidth}\centering\includegraphics[width=\linewidth,height=.30\textheight,keepaspectratio]{#1}\caption*{#2}\end{minipage}\hfill
+\begin{minipage}[t]{.485\textwidth}\centering\includegraphics[width=\linewidth,height=.30\textheight,keepaspectratio]{#3}\caption*{#4}\end{minipage}\end{figure}}
+\newcommand{\resultbox}[1]{\begin{center}\fcolorbox{mainblue}{codebg}{\parbox{.91\textwidth}{#1}}\end{center}}
+
+\begin{document}
+\begin{titlepage}\centering
+\vspace*{1.8cm}{\Large 计算机科学与技术学院\par}\vspace{1.3cm}
+{\Huge\bfseries 系统开发工具基础\par}\vspace{.4cm}
+{\LARGE\bfseries 第二周实验报告\par}\vspace{2cm}
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{>{\bfseries}rl}
+学生姓名：&杜铭昊\\学号：&25020007021\\授课教师：&周小伟\\
+实验环境：&Ubuntu Linux 虚拟机\\报告内容：&课堂第5--8题与10个拓展实例\\
+实验日期：&2026年8月31日
+\end{tabular}
+\vfill{\large 进程控制、开发工具、调试与性能分析综合实践\par}
+\end{titlepage}
+
+\tableofcontents\clearpage
+
+\section{实验说明与环境}
+本实验严格对应第二周课堂第5--8题，在Ubuntu虚拟机中完成真实运行，并保存代码、标准输出、标准错误、测试结果、性能数据和桌面截图。课堂题按照题目步骤逐项说明；10个拓展实例与课堂内容相关，采用较简洁的“原理--过程--结果--反思”结构。仓库地址为\url{https://github.com/ddd666j/system-tools-week2}，实验按阶段提交，拓展实例每两个形成一次独立commit。
+
+\begin{table}[H]\centering
+\begin{tabularx}{\textwidth}{@{}lX@{}}\toprule
+项目 & 配置与验证方式\\\midrule
+操作系统 & Ubuntu Linux虚拟机；Windows用于同步材料与GitHub推送\\
+主要工具 & Bash任务控制、Python 3.12、pylsp、ruff、pytest、pdb、cProfile、Git、XeLaTeX\\
+目录结构 & \texttt{q05--q08}保存课堂题；\texttt{practice/instance01--10}保存拓展实例；\texttt{report}保存报告\\
+证据 & 每一步保存命令、输出、结果文件和Ubuntu桌面截图；Git提交记录另行保存\\\bottomrule
+\end{tabularx}\end{table}
+
+\section{第5题：控制一个可清理的后台任务}
+\subsection{实验原理}
+Shell任务控制以作业为单位管理前台和后台进程。\texttt{Ctrl-Z}由终端向前台进程组发送\texttt{SIGTSTP}，使任务暂停；\texttt{bg}向暂停任务发送\texttt{SIGCONT}并让其在后台继续；\texttt{jobs}显示当前Shell维护的作业表。\texttt{jobs -p}能直接取得作业PID，避免人工抄写出错。脚本用\texttt{trap}捕获\texttt{SIGTERM}或\texttt{SIGINT}，在退出前写入清理标志。\texttt{SIGKILL}无法被捕获，因此题目禁止\texttt{kill -9}。
+
+\subsection{步骤1：创建并检查worker脚本}
+在\texttt{q05}目录创建\texttt{worker.sh}，循环每秒输出计数值，并为TERM和INT注册清理处理函数。赋予执行权限后检查文件内容和权限。
+\begin{lstlisting}
+#!/usr/bin/env bash
+trap 'echo CLEAN_EXIT >> cleanup.log; exit 0' TERM INT
+n=0
+while true; do
+  echo "$n"
+  n=$((n+1))
+  sleep 1
+done
+
+chmod +x worker.sh
+./worker.sh >stdout.log 2>stderr.log
+\end{lstlisting}
+\screen{q05_01_worker_setup.png}{第5题步骤1：脚本、权限以及前台启动与输出重定向}
+
+\subsection{步骤2：挂起、恢复并检查作业状态}
+脚本前台运行后按\texttt{Ctrl-Z}。终端报告Stopped，说明前台进程组已暂停。执行\texttt{jobs}复核状态，再执行\texttt{bg}使它在后台继续。再次执行\texttt{jobs}可看到Running。由于stdout已经重定向，后台任务不会持续污染终端，但\texttt{stdout.log}中的计数继续增长。
+\begin{lstlisting}
+# 在前台运行期间按 Ctrl-Z
+jobs
+bg
+jobs
+wc -l stdout.log stderr.log
+\end{lstlisting}
+\screen{q05_02_ctrlz_bg_jobs.png}{第5题步骤2：Ctrl-Z挂起、bg恢复和jobs状态验证}
+
+\subsection{步骤3：自动取得PID并正常终止}
+用命令替换接收\texttt{jobs -p}输出，不手工填写PID。向任务发送\texttt{SIGTERM}，随后\texttt{wait}等待子进程彻底结束并收集退出状态。最后检查清理日志、作业表及输出文件。
+\begin{lstlisting}
+pid=$(jobs -p)
+printf 'PID=%s\n' "$pid"
+kill -TERM "$pid"
+wait "$pid"
+printf 'wait_status=%s\n' "$?"
+cat cleanup.log
+jobs
+wc -l stdout.log stderr.log
+\end{lstlisting}
+\screen{q05_03_sigterm_cleanup.png}{第5题步骤3：SIGTERM、wait、CLEAN\_EXIT与任务退出验证}
+
+\subsection{实验结果与错误反思}
+\resultbox{stdout和stderr分别写入\texttt{stdout.log}与\texttt{stderr.log}；任务经历Stopped和Running状态；PID由\texttt{jobs -p}自动取得；SIGTERM后\texttt{wait}返回0；\texttt{cleanup.log}出现\texttt{CLEAN\_EXIT}；最终\texttt{jobs}为空，\texttt{stderr.log}为0字节。}
+反思：不能用\texttt{kill -9}代替SIGTERM，因为SIGKILL不会触发\texttt{trap}，清理文件将无法生成。还应在同一个交互式Shell中执行任务控制命令，因为作业表属于当前Shell。
+
+\clearpage
+\section{第6题：语义重构与本地开发反馈}
+\subsection{实验原理}
+语言服务器协议（LSP）让编辑器通过程序语法与符号关系实现跳转到定义、查找引用和重命名。语义重命名不同于文本替换：服务器返回\texttt{WorkspaceEdit}，只修改对应符号，并能同步处理定义、导入和测试引用。ruff负责静态检查和自动修复，pytest负责行为验证；二者共同形成快速本地反馈环。
+
+\subsection{步骤1：建立环境和基线文件}
+创建\texttt{math\_utils.py}、\texttt{app.py}和\texttt{test\_math\_utils.py}，先检查Python、pylsp、ruff与pytest版本，再运行原始程序与测试，确认重构前基线正确。
+\begin{lstlisting}
+python3 --version
+pylsp --version
+ruff --version
+pytest --version
+python3 app.py
+pytest -q
+\end{lstlisting}
+\screen{q06_01_environment_initial.png}{第6题步骤1：开发工具环境与初始代码验证}
+
+\subsection{步骤2：跳转到定义与查找引用}
+启用Python语言服务器，定位\texttt{app.py}中的\texttt{total\_price}调用。跳转到定义返回\texttt{math\_utils.py}中的函数定义；查找引用得到定义、应用程序导入与调用、测试导入与调用共5个位置。这一步确认语言服务器理解的是符号关系，而不是简单字符串搜索。
+
+\subsection{步骤3：使用Rename Symbol完成语义重构}
+在函数符号处请求重命名为\texttt{calculate\_total}。语言服务器返回跨3个文档的编辑，应用全部\texttt{WorkspaceEdit}后，定义、\texttt{app.py}和测试文件中的引用同步更新。
+\begin{lstlisting}
+# math_utils.py
+def calculate_total(price: float, count: int) -> float:
+    return price * count
+
+# app.py
+from math_utils import calculate_total
+print(calculate_total(12.5, 4))
+\end{lstlisting}
+\screen{q06_02_lsp_actions.png}{第6题步骤2--3：定义跳转、5处引用和跨文件语义重命名}
+
+\subsection{步骤4：ruff发现并修复未使用导入}
+按题意在\texttt{app.py}临时加入\texttt{import os}。ruff报告F401未使用导入，说明静态检查能够在运行前发现无效依赖。执行自动修复后，\texttt{import os}被删除，再次检查通过。
+\begin{lstlisting}
+ruff check .
+ruff check . --fix
+ruff check .
+\end{lstlisting}
+\screen{q06_03_ruff_feedback.png}{第6题步骤4：ruff报告F401并完成自动修复}
+
+\subsection{步骤5：最终测试与运行结果}
+依次运行ruff、pytest和应用程序。ruff无错误，pytest显示\texttt{1 passed}，应用输出\texttt{50.0}，证明代码风格、测试行为和实际运行均正确。
+\screen{q06_04_final_tests.png}{第6题步骤5：ruff、pytest与应用输出的最终验收}
+
+\subsection{实验结果与错误反思}
+\resultbox{pylsp完成定义跳转并找到5个定义/引用位置；Rename Symbol产生3个文档编辑；ruff成功发现并删除未使用的\texttt{import os}；pytest结果为\texttt{1 passed}；应用输出\texttt{50.0}。}
+反思：不能仅用全局字符串替换冒充语义重构，它可能误改注释、同名局部变量或字符串。实现LSP客户端时还要同时处理\texttt{documentChanges}和\texttt{changes}两种WorkspaceEdit形式，并确保全部编辑均被应用。
+
+\clearpage
+\section{第7题：用调试器定位归并排序缺陷}
+\subsection{实验原理}
+归并排序递归拆分输入，再由\texttt{merge}函数合并两个已经有序的子序列。合并时\texttt{i}索引左序列，\texttt{j}索引右序列；若右侧元素更小，应追加\texttt{right[j]}。调试器通过断点和变量观察把“结果错误”缩小到具体状态与语句，最小修复可以减少引入新问题的风险。
+
+\subsection{步骤1：运行缺陷版本并保存错误现象}
+按照题目代码运行给定输入。程序没有抛出异常、退出码也是0，但输出为\texttt{[1, 5, 4, 3, 4, 5, 6, 9]}，不满足非降序排列，且两个1没有正确保留。说明仅检查退出码不足以判断算法正确性。
+\screen{q07_01_initial_failure.png}{第7题步骤1：缺陷版本运行成功但排序结果错误}
+
+\subsection{步骤2：在pdb中设置断点并观察变量}
+进入pdb，在\texttt{merge}函数错误的追加语句处设置断点，运行到右分支后检查\texttt{i}、\texttt{j}、\texttt{left[i]}与\texttt{right[j]}。一次关键状态为\texttt{i=0, j=0, left[i]=3, right[j]=1}，按算法应追加右侧当前元素\texttt{right[j]}，但代码错误读取\texttt{right[i]}。
+\begin{lstlisting}
+python3 -m pdb merge_sort_buggy.py
+(Pdb) break merge_sort_buggy.py:<append所在行>
+(Pdb) continue
+(Pdb) p i
+(Pdb) p j
+(Pdb) p left[i]
+(Pdb) p right[j]
+\end{lstlisting}
+\screen{q07_02_pdb_observation.png}{第7题步骤2：断点处观察i、j及左右当前元素}
+
+\subsection{步骤3：完成最小修复}
+只把右分支的\texttt{result.append(right[i])}改成\texttt{result.append(right[j])}，其余归并排序结构保持不变，也没有使用\texttt{sorted}替代算法。
+\begin{lstlisting}
+else:
+    result.append(right[j])
+    j += 1
+\end{lstlisting}
+\screen{q07_03_minimal_fix.png}{第7题步骤3：仅修正错误索引的最小补丁}
+
+\subsection{步骤4：增加两项pytest测试并验收}
+测试一覆盖题目给定输入，期望结果为\texttt{[1,1,2,3,4,5,6,9]}；测试二使用含重复元素的列表，验证重复值不会丢失。执行pytest后两项均通过，直接运行修复版也得到正确结果。
+\begin{lstlisting}
+def test_given_input():
+    assert merge_sort([3, 1, 4, 1, 5, 9, 2, 6]) == [1, 1, 2, 3, 4, 5, 6, 9]
+
+def test_duplicates():
+    assert merge_sort([2, 2, 1, 3, 1]) == [1, 1, 2, 2, 3]
+\end{lstlisting}
+\screen{q07_04_pytest_result.png}{第7题步骤4：给定输入与重复元素测试全部通过}
+
+\subsection{实验结果与错误反思}
+\resultbox{缺陷版本输出无序列表；pdb在错误分支捕获到关键索引和元素值；最小修复仅将\texttt{right[i]}改为\texttt{right[j]}；修复后给定结果正确，两项pytest测试全部通过。}
+反思：最初若把断点设在\texttt{else}关键字所在行，pdb不会按预期暂停，因为关键字本身不是独立可执行语句。应把断点设置在实际的\texttt{append}语句上。测试不仅应覆盖给定样例，还应验证重复元素，防止排序正确但元素个数错误。
+
+\clearpage
+\section{第8题：先测量，再优化慢速词频程序}
+\subsection{实验原理}
+原程序用列表保存不同词，每次\texttt{word not in unique}都可能线性扫描列表。若总词数为$n$、不同词数为$u$，总体复杂度近似$O(nu)$。集合基于哈希表，平均成员查询接近$O(1)$，因此整体可接近$O(n)$。性能优化必须遵循“先测量、再定位、后修改、再对比”，并用相同输入与一致输出验证优化没有改变语义。
+
+\subsection{步骤1：生成固定输入}
+使用固定随机种子\texttt{20260831}，从1000个候选词中生成30000个词并保存为\texttt{words.txt}。固定种子确保多次实验读取相同数据，便于复现和公平比较；程序不能把最终不同词数量写死为1000。
+\screen{q08_01_generate_input.png}{第8题步骤1：固定随机种子生成30000词输入}
+
+\subsection{步骤2：原程序两次计时并进行cProfile分析}
+在相同\texttt{words.txt}上运行原程序两次，耗时分别为0.085 s和0.088 s，中位数为0.0865 s。随后执行\texttt{python3 -m cProfile -s cumulative}，报告显示模块顶层去重循环累计约0.078 s，是主要耗时位置。
+\begin{lstlisting}
+TIMEFORMAT='%3R'
+time python3 wordfreq_original.py
+time python3 wordfreq_original.py
+python3 -m cProfile -s cumulative wordfreq_original.py
+\end{lstlisting}
+\screen{q08_02_time_profile.png}{第8题步骤2：原程序两次计时及cProfile累计耗时定位}
+
+\subsection{步骤3：使用集合优化且保持输出不变}
+把线性列表成员测试替换为集合插入。集合自动去重，不需要知道不同词数量，最终仍从数据计算\texttt{len(unique)}。对原版和优化版输出执行比较，确认\texttt{count}一致。
+\begin{lstlisting}
+words = open("words.txt", encoding="utf-8").read().split()
+unique = set()
+for word in words:
+    unique.add(word)
+print("count=", len(unique))
+\end{lstlisting}
+\screen{q08_03_optimization.png}{第8题步骤3：集合优化及输出一致性检查}
+
+\subsection{步骤4：优化后复测并计算加速比}
+优化程序在相同输入上运行两次，耗时均为0.009 s，中位数为0.009 s。加速比为$0.0865/0.009=9.61$，即优化版约快9.61倍。原版和优化版均输出\texttt{count=1000}，但该值来自输入计算而非硬编码。
+\screen{q08_04_speedup_result.png}{第8题步骤4：中位数、输出一致性及9.61倍加速结果}
+
+\subsection{实验结果与错误反思}
+\resultbox{生成30000个固定随机词；原程序两次耗时0.085 s、0.088 s，中位数0.0865 s；cProfile定位到线性去重循环；集合版两次均为0.009 s，中位数0.009 s；输出一致，加速比9.61倍。}
+反思：最初使用GNU \texttt{time}的\texttt{\%e}格式时精度只有百分之一秒，优化程序可能显示0.00 s并导致加速比除零。改用Bash内置\texttt{time}的毫秒精度后得到有效结果。微基准还应多次运行并使用中位数，降低系统抖动影响。
+
+\clearpage
+\section{10个相关拓展实例}
+所有实例均在Ubuntu虚拟机实测，目录内保存脚本、输入、日志、结果及关键截图。本节简洁说明过程和结果。
+
+\subsection{实例1：后台监控任务的TERM清理}
+原理与过程：创建持续写入心跳日志的监控脚本，用\texttt{trap}登记TERM清理动作，后台启动后自动取得PID并发送SIGTERM。结果：心跳日志持续增长，清理日志出现退出标志，任务消失。反思：可清理进程应优先使用可捕获信号。
+\twopic{instance01_01_source.png}{实例1脚本与启动}{instance01_02_result.png}{TERM清理结果}
+
+\clearpage
+\subsection{实例2：CPU任务的后台运行与等待}
+原理与过程：启动可重复的Python计算任务，将标准输出和错误分开保存，记录PID并用\texttt{wait}回收。结果：任务正常结束，计算结果写入日志，stderr为空，退出状态为0。反思：后台任务应保存PID和返回码，不能仅凭进程消失判断成功。
+\twopic{instance02_01_source.png}{实例2计算程序与运行方式}{instance02_02_result.png}{输出、错误和退出状态}
+
+\clearpage
+\subsection{实例3：生产者管道与信号结束}
+原理与过程：生产者持续输出数据，通过Shell启动和监控，在达到条件后发送可处理信号并等待退出。结果：数据文件内容完整，清理流程正常执行。反思：管道或后台作业涉及多个进程时，要明确实际发送信号的目标。
+\twopic{instance03_01_source.png}{实例3生产者与信号逻辑}{instance03_02_result.png}{实例3运行和清理结果}
+
+\clearpage
+\subsection{实例4：pytest驱动的计算器验证}
+原理与过程：为计算函数编写正常、边界和异常输入测试，通过pytest自动执行。结果：测试全部通过，说明实现满足约定。反思：测试应验证具体返回值和异常类型，避免只有执行没有断言。
+\twopic{instance04_01_source.png}{实例4实现与测试代码}{instance04_02_result.png}{pytest执行结果}
+
+\clearpage
+\subsection{实例5：ruff发现并修复代码质量问题}
+原理与过程：对含未使用导入等问题的Python报告程序运行ruff，保存失败输出，再自动修复并复查。结果：问题被定位并删除，最终ruff通过且程序输出保持正确。反思：静态修复后仍须运行程序验证行为。
+\twopic{instance05_01_ruff_failure.png}{实例5 ruff失败证据}{instance05_02_fix_result.png}{修复与复查结果}
+
+\clearpage
+\subsection{实例6：失败测试指导用户名函数修复}
+原理与过程：先运行测试暴露用户名处理缺陷，根据失败断言修改实现，再重新运行pytest。结果：修复前测试失败，修复后全部通过。反思：先保留失败证据能说明修复目标，避免报告只展示最终成功。
+\twopic{instance06_01_pytest_failure.png}{实例6修复前测试失败}{instance06_02_fix_result.png}{修复后测试通过}
+
+\clearpage
+\subsection{实例7：pdb定位二分查找边界错误}
+原理与过程：对二分查找缺陷版设置断点，观察low、high、mid及当前元素，确认边界更新错误后实施最小修改。结果：目标存在与不存在等测试通过。反思：调试记录应呈现变量状态与因果关系，而不只是最终代码。
+\twopic{instance07_01_pdb_observation.png}{实例7 pdb变量观察}{instance07_02_fix_tests.png}{最小修复与测试结果}
+
+\clearpage
+\subsection{实例8：递归斐波那契性能分析与优化}
+原理与过程：用cProfile测量重复递归的调用开销，再改为迭代或缓存方案并对比相同输入。结果：输出一致，优化版显著减少调用和耗时。反思：性能优化必须先确认热点并保持结果不变。
+\twopic{instance08_01_cprofile.png}{实例8原算法cProfile结果}{instance08_02_optimization.png}{优化实现与对比}
+
+\clearpage
+\subsection{实例9：列表与集合成员查询基准}
+原理与过程：固定随机种子生成5000个允许值和20000次查询，分别用列表和集合执行3轮，比较中位数并校验命中数。结果：两种方法均命中12399次；列表中位数0.280913 s，集合0.000484 s，集合约快580.37倍。反思：微基准必须固定数据并验证两种算法结果一致。
+\twopic{instance09_01_source.png}{实例9固定数据和基准代码}{instance09_02_result.png}{三轮计时与580.37倍加速}
+
+\clearpage
+\subsection{实例10：整体读取与流式读取的内存比较}
+原理与过程：生成200000行数字文件，用\texttt{tracemalloc}分别测量\texttt{readlines}整体加载和逐行流式处理的峰值内存，并核对计数与总和。结果：两者均得到200000行、总和999900000；峰值内存分别为17887080和21821字节，流式处理约减少819.72倍。反思：优化内存时要同时验证时间和结果，流式方案节省内存但本次耗时略高。
+\twopic{instance10_01_source.png}{实例10数据与两种读取方式}{instance10_02_result.png}{结果一致与819.72倍内存降低}
+
+\clearpage
+\section{Git提交与GitHub记录}
+课堂第5--8题先分阶段提交，拓展实例按每两个一组形成5次独立提交，最后再单独提交实验报告。这样可以从提交历史直接追踪每个阶段的内容变化，不采用单次全量提交。
+\begin{table}[H]\centering\begin{tabularx}{\textwidth}{@{}llX@{}}\toprule
+提交 & 范围 & 说明\\\midrule
+\texttt{2a927f8} & 第5--6题 & 任务控制与语义重构材料\\
+\texttt{51dd078} & 第7--8题 & 调试、测试与性能优化材料\\
+\texttt{77ba72d} & 实例1--2 & 后台任务与等待\\
+\texttt{0ed503f} & 实例3--4 & 信号与pytest\\
+\texttt{f8c882d} & 实例5--6 & ruff与测试驱动修复\\
+\texttt{97f7165} & 实例7--8 & pdb与性能分析\\
+\texttt{fe41482} & 实例9--10 & 数据结构性能与内存分析\\\bottomrule
+\end{tabularx}\end{table}
+\screen{commit_instances01_02_77ba72d.png}{实例1--2独立提交记录}
+\screen{commit_instances03_04_0ed503f.png}{实例3--4独立提交记录}
+\screen{commit_instances05_06_f8c882d.png}{实例5--6独立提交记录}
+\screen{commit_instances07_08_97f7165_windows.png}{实例7--8独立提交记录}
+\screen{commit_instances09_10_fe41482_windows.png}{实例9--10独立提交记录及远程仓库地址}
+
+\section{综合结论与错误反思}
+本周建立了从运行态控制到代码质量验证的完整开发闭环。进程实验说明信号、作业表和清理逻辑必须配套验证；语义重构说明开发工具不仅提高编辑效率，还能降低跨文件修改遗漏；调试实验说明应通过断点状态解释错误因果；性能实验说明优化前必须有可复现输入、基线计时和热点证据。
+
+主要错误与改进包括：任务控制必须在同一交互式Shell中完成；SIGKILL不能用于需要清理的程序；LSP编辑必须完整应用所有文档修改；pdb断点应落在可执行语句上；计时工具精度不足会产生0.00 s和无效加速比；性能与内存优化都必须用一致输出验证正确性。最终代码、测试、日志、截图、PDF和Git历史共同组成可复查、可重复的实验证据链。
+
+\appendix
+\section{最终验收清单}
+\begin{enumerate}
+\item 第5题：stdout/stderr分离、Stopped、Running、自动PID、SIGTERM、wait、CLEAN\_EXIT和空作业表均有证据。
+\item 第6题：LSP定义跳转、引用查找、跨文件Rename Symbol、ruff失败与修复、pytest通过均有证据。
+\item 第7题：错误输出、pdb变量、最小diff、给定输入与重复元素测试均有证据。
+\item 第8题：固定输入、原版两次计时、cProfile、优化版两次计时、中位数、加速比和输出一致性均有证据。
+\item 实例1--10均保存过程、结果和关键截图；实例每两个一次commit并已推送至GitHub。
+\item LaTeX源文件与PDF一起保存，Linux环境可使用XeLaTeX或latexmk重新生成PDF。
+\end{enumerate}
+\end{document}
