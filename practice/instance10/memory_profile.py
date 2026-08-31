@@ -1,0 +1,41 @@
+import time
+import tracemalloc
+
+
+def read_all(path):
+    with open(path, encoding="utf-8") as stream:
+        values = [int(line) for line in stream.readlines()]
+    return len(values), sum(values)
+
+
+def stream_lines(path):
+    count = 0
+    total = 0
+    with open(path, encoding="utf-8") as stream:
+        for line in stream:
+            count += 1
+            total += int(line)
+    return count, total
+
+
+def measure(function, path):
+    tracemalloc.start()
+    started = time.perf_counter()
+    result = function(path)
+    elapsed = time.perf_counter() - started
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return result, elapsed, current, peak
+
+
+all_result, all_time, _, all_peak = measure(read_all, "numbers.txt")
+stream_result, stream_time, _, stream_peak = measure(stream_lines, "numbers.txt")
+
+print("read_all_count={} sum={}".format(*all_result))
+print("stream_count={} sum={}".format(*stream_result))
+print("same_results=" + str(all_result == stream_result))
+print("read_all_time={:.6f}s".format(all_time))
+print("stream_time={:.6f}s".format(stream_time))
+print("read_all_peak_bytes=" + str(all_peak))
+print("stream_peak_bytes=" + str(stream_peak))
+print("memory_reduction={:.2f}x".format(all_peak / stream_peak))

@@ -1,0 +1,8 @@
+read_all_count=200000 sum=999900000
+stream_count=200000 sum=999900000
+same_results=True
+read_all_time=0.094100s
+stream_time=0.113728s
+read_all_peak_bytes=17887080
+stream_peak_bytes=21821
+memory_reduction=819.72x

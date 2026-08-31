@@ -1,0 +1,10 @@
+query_count=20000
+allowed_count=5000
+list_result=12399
+set_result=12399
+same_results=True
+list_times=[0.279854, 0.282258, 0.280913]
+set_times=[0.000522, 0.000446, 0.000484]
+list_median=0.280913s
+set_median=0.000484s
+speedup=580.37x
