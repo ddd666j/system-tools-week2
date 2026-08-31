@@ -1,0 +1,39 @@
+INSTANCE07: PDB locates binary-search boundary defect
+-1
+EXPECTED_INDEX=4
+--- pdb observation ---
+> /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(1)<module>()
+-> def binary_search(values, target):
+(Pdb) Breakpoint 1 at /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py:6
+(Pdb) > /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(6)binary_search()
+-> if values[middle] < target:
+(Pdb) 0
+(Pdb) 4
+(Pdb) 2
+(Pdb) 6
+(Pdb) > /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(6)binary_search()
+-> if values[middle] < target:
+(Pdb) 3
+(Pdb) 4
+(Pdb) 3
+(Pdb) 8
+(Pdb) -1
+The program finished and will be restarted
+> /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(1)<module>()
+-> def binary_search(values, target):
+(Pdb) --- minimal fix ---
+--- binary_search_actual_buggy.tmp	2026-08-31 01:44:39.854020772 -0700
++++ binary_search.py	2026-08-31 01:44:39.854020772 -0700
+@@ -1,7 +1,7 @@
+ def binary_search(values, target):
+     low = 0
+     high = len(values) - 1
+-    while low < high:
++    while low <= high:
+         middle = (low + high) // 2
+         if values[middle] < target:
+             low = middle + 1
+--- final tests ---
+.....                                                                    [100%]
+5 passed in 0.01s
+VERIFICATION=passed

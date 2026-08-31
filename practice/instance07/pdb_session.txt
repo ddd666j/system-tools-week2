@@ -1,0 +1,20 @@
+> /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(1)<module>()
+-> def binary_search(values, target):
+(Pdb) Breakpoint 1 at /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py:6
+(Pdb) > /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(6)binary_search()
+-> if values[middle] < target:
+(Pdb) 0
+(Pdb) 4
+(Pdb) 2
+(Pdb) 6
+(Pdb) > /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(6)binary_search()
+-> if values[middle] < target:
+(Pdb) 3
+(Pdb) 4
+(Pdb) 3
+(Pdb) 8
+(Pdb) -1
+The program finished and will be restarted
+> /home/dmh/桌面/system-tools-week2/practice/instance07/binary_search.py(1)<module>()
+-> def binary_search(values, target):
+(Pdb) 

@@ -1,0 +1,7 @@
+before_runs=[0.114613, 0.114358, 0.117767]
+after_runs=[6e-06, 3e-06, 2e-06]
+before_median=0.114613s
+after_median=0.000003s
+speedup=40556.45x
+same_results=True
+result=2178309

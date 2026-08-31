@@ -1,0 +1,13 @@
+b binary_search.py:6
+r
+p low
+p high
+p middle
+p values[middle]
+c
+p low
+p high
+p middle
+p values[middle]
+c
+q
