@@ -1,0 +1,13 @@
+INSTANCE01: signal-aware background monitor
+PID_FROM_SHELL=2846
+   PID   PPID STAT     ELAPSED CMD
+  2846   2843 S          00:03 bash ./monitor.sh
+WAIT_EXIT=0
+--- cleanup.log ---
+CLEANUP pid=2846 last_tick=3
+--- heartbeat tail ---
+HEARTBEAT pid=2846 tick=1 time=00:04:47
+HEARTBEAT pid=2846 tick=2 time=00:04:48
+HEARTBEAT pid=2846 tick=3 time=00:04:49
+STDERR_BYTES=0
+PROCESS_ALIVE=no

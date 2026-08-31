@@ -1,0 +1,15 @@
+INSTANCE02: inspect and adjust process priority
+PID_FROM_SHELL=2865
+--- initial process state ---
+   PID   PPID  NI PRI STAT %CPU     ELAPSED CMD
+  2865   2863  10   9 RN   99.5       00:02 python3 cpu_worker.py
+--- adjust niceness 10 -> 15 ---
+2865 (process ID) old priority 10, new priority 15
+   PID  NI PRI STAT %CPU     ELAPSED CMD
+  2865  15   4 RN    100       00:02 python3 cpu_worker.py
+WAIT_EXIT=0
+--- worker output ---
+received_signal=15
+elapsed=2.005s final_value=6121196
+STDERR_BYTES=0
+PROCESS_ALIVE=no
