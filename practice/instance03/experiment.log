@@ -1,0 +1,10 @@
+INSTANCE03: pipeline exit status and pipefail
+--- default pipeline ---
+DEFAULT_PIPELINE_STATUS=0
+DEFAULT_COUNT=3
+DEFAULT_STDERR=producer: simulated failure
+--- pipeline with pipefail ---
+PIPEFAIL_STATUS=7
+PIPEFAIL_COUNT=3
+PIPEFAIL_STDERR=producer: simulated failure
+VERIFICATION=passed
