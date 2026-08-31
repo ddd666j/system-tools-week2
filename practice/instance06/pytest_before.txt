@@ -1,0 +1,28 @@
+....FF                                                                   [100%]
+=================================== FAILURES ===================================
+__________________________ test_reject_blank_names[ ] __________________________
+
+raw = ' '
+
+    @pytest.mark.parametrize("raw", ["", " ", "\t\n"])
+    def test_reject_blank_names(raw):
+>       with pytest.raises(ValueError, match="must not be blank"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_username.py:16: Failed
+________________________ test_reject_blank_names[\t\n] _________________________
+
+raw = '\t\n'
+
+    @pytest.mark.parametrize("raw", ["", " ", "\t\n"])
+    def test_reject_blank_names(raw):
+>       with pytest.raises(ValueError, match="must not be blank"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_username.py:16: Failed
+=========================== short test summary info ============================
+FAILED test_username.py::test_reject_blank_names[ ] - Failed: DID NOT RAISE V...
+FAILED test_username.py::test_reject_blank_names[\t\n] - Failed: DID NOT RAIS...
+2 failed, 4 passed in 0.01s

@@ -1,0 +1,44 @@
+INSTANCE06: parameterized pytest and minimal boundary fix
+--- reproduce failure ---
+....FF                                                                   [100%]
+=================================== FAILURES ===================================
+__________________________ test_reject_blank_names[ ] __________________________
+
+raw = ' '
+
+    @pytest.mark.parametrize("raw", ["", " ", "\t\n"])
+    def test_reject_blank_names(raw):
+>       with pytest.raises(ValueError, match="must not be blank"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_username.py:16: Failed
+________________________ test_reject_blank_names[\t\n] _________________________
+
+raw = '\t\n'
+
+    @pytest.mark.parametrize("raw", ["", " ", "\t\n"])
+    def test_reject_blank_names(raw):
+>       with pytest.raises(ValueError, match="must not be blank"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_username.py:16: Failed
+=========================== short test summary info ============================
+FAILED test_username.py::test_reject_blank_names[ ] - Failed: DID NOT RAISE V...
+FAILED test_username.py::test_reject_blank_names[\t\n] - Failed: DID NOT RAIS...
+2 failed, 4 passed in 0.01s
+PYTEST_BEFORE_EXIT=1
+--- apply minimal fix ---
+--- username_actual_buggy.tmp	2026-08-31 01:18:18.746850582 -0700
++++ username.py	2026-08-31 01:18:18.746850582 -0700
+@@ -1,4 +1,4 @@
+ def normalize_username(value):
+-    if value == "":
++    if not value.strip():
+         raise ValueError("username must not be blank")
+     return value.strip().lower()
+--- final test run ---
+......                                                                   [100%]
+6 passed in 0.01s
+VERIFICATION=passed

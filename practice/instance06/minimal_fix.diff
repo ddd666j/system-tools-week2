@@ -1,0 +1,8 @@
+--- username_actual_buggy.tmp	2026-08-31 01:18:18.746850582 -0700
++++ username.py	2026-08-31 01:18:18.746850582 -0700
+@@ -1,4 +1,4 @@
+ def normalize_username(value):
+-    if value == "":
++    if not value.strip():
+         raise ValueError("username must not be blank")
+     return value.strip().lower()
